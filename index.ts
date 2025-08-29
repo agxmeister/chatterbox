@@ -4,6 +4,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import * as dotenv from "dotenv";
 import {Tool} from "@anthropic-ai/sdk/resources/messages/messages.mjs";
 import readline from "readline/promises";
+import { ConfigRepository, ConfigService } from "./modules/config/index.js";
 
 dotenv.config();
 
@@ -13,7 +14,7 @@ export class McpClient {
     private readonly transport: StdioClientTransport;
     private tools: Tool[] = [];
 
-    constructor() {
+    constructor(private configService: ConfigService) {
         this.anthropic = new Anthropic({
             apiKey: process.env.ANTHROPIC_API_KEY
         });
@@ -25,10 +26,10 @@ export class McpClient {
 
         this.transport = new StdioClientTransport({
             command: process.execPath,
-            args: ["/Users/alexeyfilatev/Documents/Projects/agxmeister/whispr/dist/index.js"],
+            args: [this.configService.getConfig().mcpServerPath],
             env: {
-                "EDGE_JIRA_DOMAIN": "webpros",
-                "EDGE_JIRA_CREDENTIALS": "YWxla3NleS5maWxhdGV2QHdlYnByb3MuY29tOkFUQVRUM3hGZkdGMFlhb0RhM2h1c2dhWV8zbWloT3hjVFk2RTJTaFpvOVVoT2VsbW9SZy1XM0h5TWVyc1JnZWFJRE1ab3ZKYm1BMDNSWURmNUtpSERqZzhVUEhNNUFVZDlHeV9hcjZFMjJqTUlOMmF3YlpMZi1wU3ZKTGJySlh3UWVxR0diUXhKalREeWVYV01yaXBWVldWcndidFhwOVRPbkU4UlRKMl9NMGdZQTF1eGdWWGJOVT1BNzhFRDU1MQ==",
+                "EDGE_JIRA_DOMAIN": process.env.EDGE_JIRA_DOMAIN!,
+                "EDGE_JIRA_CREDENTIALS": process.env.EDGE_JIRA_CREDENTIALS!,
             },
         });
     }
@@ -155,7 +156,10 @@ export class McpClient {
 }
 
 (async () => {
-    const mcpClient = new McpClient();
+    const configRepository = new ConfigRepository('config.json');
+    const configService = new ConfigService(configRepository);
+    const mcpClient = new McpClient(configService);
+    
     try {
         await mcpClient.connect();
         await mcpClient.chatLoop();
