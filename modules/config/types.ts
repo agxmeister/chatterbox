@@ -1,3 +1,8 @@
+export interface ServerConfig {
+    args: string[];
+    env: Record<string, string>;
+}
+
 export interface Config {
-    mcpServerPath: string;
+    servers: Record<string, ServerConfig>;
 }

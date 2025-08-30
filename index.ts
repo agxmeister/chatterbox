@@ -26,11 +26,7 @@ export class McpClient {
 
         this.transport = new StdioClientTransport({
             command: process.execPath,
-            args: [this.configService.getConfig().mcpServerPath],
-            env: {
-                "EDGE_JIRA_DOMAIN": process.env.EDGE_JIRA_DOMAIN!,
-                "EDGE_JIRA_CREDENTIALS": process.env.EDGE_JIRA_CREDENTIALS!,
-            },
+            ...this.configService.getConfig().servers.whispr,
         });
     }
 
