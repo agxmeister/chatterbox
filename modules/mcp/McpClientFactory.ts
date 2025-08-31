@@ -3,8 +3,8 @@ import {McpClient} from "./McpClient.js";
 
 export class McpClientFactory {
     constructor(
-        private serverName: string,
-        private serverConfig: ServerConfig
+        readonly serverName: string,
+        readonly serverConfig: ServerConfig
     ) {}
 
     create(): McpClient {

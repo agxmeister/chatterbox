@@ -1,12 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { Llm } from "./types.js";
 import { Toolbox } from "../mcp/types.js";
 import { McpClient } from "../mcp/index.js";
 
-export class Claude {
+export class Claude implements Llm {
     constructor(
         private anthropic: Anthropic,
         readonly clients: McpClient[],
-        private toolbox: Toolbox
+        readonly toolbox: Toolbox
     ) {}
 
     async chat(messages: string[], history: any[]): Promise<string[]> {
@@ -63,7 +64,7 @@ export class Claude {
         for (const [clientName, tools] of Object.entries(this.toolbox)) {
             if (tools.some(tool => tool.name === toolName)) {
                 const client = this.clients.find(c => c.serverName === clientName);
-                if (client && client.isConnected()) {
+                if (client) {
                     return await client.callTool(toolName, parameters);
                 }
             }

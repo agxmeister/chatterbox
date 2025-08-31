@@ -4,15 +4,14 @@ import {Tool} from "@anthropic-ai/sdk/resources/messages/messages.mjs";
 import { ServerConfig } from "../config/types.js";
 
 export class McpClient {
-    private readonly mcp: Client;
+    private readonly client: Client;
     private readonly transport: StdioClientTransport;
-    private connected = false;
 
     constructor(
         readonly serverName: string,
-        private serverConfig: ServerConfig
+        readonly serverConfig: ServerConfig
     ) {
-        this.mcp = new Client({
+        this.client = new Client({
             name: `chatterbox-client-${serverName}`,
             version: "1.0.0"
         });
@@ -24,73 +23,45 @@ export class McpClient {
     }
 
     async connect(): Promise<void> {
-        if (this.connected) {
-            return;
-        }
-
-        console.log(`Connecting to MCP server: ${this.serverName}...`);
         try {
-            await this.mcp.connect(this.transport);
-            console.log(`Connected to MCP server: ${this.serverName}`);
-            this.connected = true;
+            await this.client.connect(this.transport);
         } catch (error) {
-            console.error(`Failed to connect to MCP server ${this.serverName}:`, error);
+            console.error(`Failed to connect to ${this.serverName}:`, error);
             throw error;
         }
     }
 
     async getTools(): Promise<Tool[]> {
-        if (!this.connected) {
-            throw new Error(`MCP client ${this.serverName} is not connected`);
-        }
-
         try {
-            const response = await this.mcp.listTools();
-            const tools = response.tools!.map(tool => ({
+            const response = await this.client.listTools();
+            return  response.tools!.map(tool => ({
                 name: tool.name,
                 description: tool.description || "",
                 input_schema: tool.inputSchema || {}
             }));
-            console.log(`Available tools from ${this.serverName}: ${tools.map(tool => tool.name).join(", ")}`);
-            return tools;
         } catch (error) {
-            console.error(`Error listing tools from ${this.serverName}:`, error);
+            console.error(`Failed to list tools provided by ${this.serverName}:`, error);
             throw error;
         }
     }
 
     async callTool(toolName: string, parameters: Record<string, any> = {}): Promise<any> {
-        if (!this.connected) {
-            throw new Error(`MCP client ${this.serverName} is not connected`);
-        }
-
         try {
-            console.log(`Calling tool ${toolName} on ${this.serverName} with args ${JSON.stringify(parameters)}`);
-            return await this.mcp.callTool({
+            return await this.client.callTool({
                 name: toolName,
-                arguments: parameters
+                arguments: parameters,
             });
         } catch (error) {
-            console.error(`Error calling tool ${toolName} on ${this.serverName}:`, error);
+            console.error(`Failed to call tool ${toolName} provided by ${this.serverName}:`, error);
             throw error;
         }
     }
 
     async disconnect(): Promise<void> {
-        if (!this.connected) {
-            return;
-        }
-
         try {
-            await this.mcp.close();
-            this.connected = false;
-            console.log(`Disconnected from MCP server: ${this.serverName}`);
+            await this.client.close();
         } catch (error) {
-            console.error(`Error disconnecting from ${this.serverName}:`, error);
+            console.error(`Failed to disconnect from ${this.serverName}:`, error);
         }
-    }
-
-    isConnected(): boolean {
-        return this.connected;
     }
 }

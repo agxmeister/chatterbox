@@ -1,15 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Claude } from "./Claude.js";
+import { Llm, LlmService } from "./types.js";
 import { Toolbox } from "../mcp/types.js";
 import {McpClient, McpClientFactory} from "../mcp/index.js";
 
-export class ClaudeService {
+export class ClaudeService implements LlmService {
     constructor(
         private anthropic: Anthropic,
         private mcpClientFactories: McpClientFactory[]
     ) {}
 
-    async engageClaude(): Promise<Claude> {
+    async engage(): Promise<Llm> {
         const mcpClients = this.mcpClientFactories.map(factory => factory.create());
         await this.connect(mcpClients);
         const toolbox = await this.buildToolbox(mcpClients);
@@ -17,11 +18,11 @@ export class ClaudeService {
         return new Claude(this.anthropic, mcpClients, toolbox);
     }
 
-    async retireClaude(claude: Claude): Promise<void> {
-        console.log("Retiring Claude and disconnecting from all MCP servers...");
+    async retire(llm: Llm): Promise<void> {
+        console.log("Retiring LLM and disconnecting from all MCP servers...");
         
         await Promise.allSettled(
-            claude.clients.map(client => client.disconnect())
+            llm.clients.map(client => client.disconnect())
         );
     }
 
@@ -45,14 +46,10 @@ export class ClaudeService {
         const toolbox: Toolbox = {};
         
         for (const client of mcpClients) {
-            if (client.isConnected()) {
-                try {
-                    toolbox[client.serverName] = await client.getTools();
-                } catch (error) {
-                    console.error(`Error getting tools from ${client.serverName}:`, error);
-                    toolbox[client.serverName] = [];
-                }
-            } else {
+            try {
+                toolbox[client.serverName] = await client.getTools();
+            } catch (error) {
+                console.error(`Error getting tools from ${client.serverName}:`, error);
                 toolbox[client.serverName] = [];
             }
         }

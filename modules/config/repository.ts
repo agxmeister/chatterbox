@@ -2,12 +2,11 @@ import * as fs from 'fs';
 import { Config } from './types.js';
 
 export class ConfigRepository {
-    constructor(private configPath: string) {}
+    constructor(readonly configPath: string) {}
 
     getConfig(): Config {
         try {
-            const configData = fs.readFileSync(this.configPath, 'utf8');
-            return JSON.parse(configData);
+            return JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
         } catch (error) {
             throw new Error(`Failed to load config from ${this.configPath}: ${error}`);
         }
