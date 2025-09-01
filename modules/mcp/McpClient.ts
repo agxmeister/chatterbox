@@ -6,6 +6,7 @@ import { ServerConfig } from "../config/types.js";
 export class McpClient {
     private readonly client: Client;
     private readonly transport: StdioClientTransport;
+    private toolsCache: Tool[] | null = null;
 
     constructor(
         readonly serverName: string,
@@ -32,13 +33,18 @@ export class McpClient {
     }
 
     async getTools(): Promise<Tool[]> {
+        if (this.toolsCache !== null) {
+            return this.toolsCache;
+        }
+
         try {
             const response = await this.client.listTools();
-            return  response.tools!.map(tool => ({
+            this.toolsCache = response.tools!.map(tool => ({
                 name: tool.name,
                 description: tool.description || "",
                 input_schema: tool.inputSchema || {}
             }));
+            return this.toolsCache;
         } catch (error) {
             console.error(`Failed to list tools provided by ${this.serverName}:`, error);
             throw error;

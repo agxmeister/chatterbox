@@ -1,13 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Llm } from "./types.js";
-import { Toolbox } from "../mcp/types.js";
 import { McpClient } from "../mcp/index.js";
 
 export class Claude implements Llm {
     constructor(
         private anthropic: Anthropic,
-        readonly clients: McpClient[],
-        readonly toolbox: Toolbox
+        readonly clients: McpClient[]
     ) {}
 
     async chat(messages: string[], history: any[]): Promise<string[]> {
@@ -19,11 +17,12 @@ export class Claude implements Llm {
         }
 
         try {
+            const allTools = await this.getTools();
             const response = await this.anthropic.messages.create({
                 model: "claude-sonnet-4-20250514",
                 max_tokens: 10000,
                 messages: history,
-                tools: Object.values(this.toolbox).flat()
+                tools: allTools
             });
 
             const output = [];
@@ -60,13 +59,28 @@ export class Claude implements Llm {
         }
     }
 
+    private async getTools() {
+        return (await Promise.all(
+            this.clients.map(async client => {
+                try {
+                    return await client.getTools();
+                } catch (error) {
+                    console.error(`Error getting tools from ${client.serverName}:`, error);
+                    return [];
+                }
+            })
+        )).flat();
+    }
+
     private async callTool(toolName: string, parameters: Record<string, any> = {}): Promise<any> {
-        for (const [clientName, tools] of Object.entries(this.toolbox)) {
-            if (tools.some(tool => tool.name === toolName)) {
-                const client = this.clients.find(c => c.serverName === clientName);
-                if (client) {
+        for (const client of this.clients) {
+            try {
+                const tools = await client.getTools();
+                if (tools.some(tool => tool.name === toolName)) {
                     return await client.callTool(toolName, parameters);
                 }
+            } catch (error) {
+                console.error(`Error getting tools from ${client.serverName}:`, error);
             }
         }
 
