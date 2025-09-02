@@ -1,8 +1,8 @@
 import { Tool } from "@anthropic-ai/sdk/resources/messages/messages.mjs";
 import { McpClient } from "../mcp/index.js";
-import { Toolbox as IToolbox } from "./types.js";
+import { Toolbox as ToolboxInterface } from "./types.js";
 
-export class Toolbox implements IToolbox {
+export class Toolbox implements ToolboxInterface {
     constructor(
         private readonly clients: McpClient[]
     ) {}
@@ -11,9 +11,13 @@ export class Toolbox implements IToolbox {
         return (await Promise.all(
             this.clients.map(async client => {
                 try {
-                    return await client.getTools();
+                    const tools = await client.getTools();
+                    return tools.map(tool => ({
+                        ...tool,
+                        name: `${client.name.toLowerCase()}-${tool.name}`
+                    }));
                 } catch (error) {
-                    console.error(`Error getting tools from ${client.serverName}:`, error);
+                    console.error(`Error getting tools from ${client.name}:`, error);
                     return [];
                 }
             })
@@ -24,11 +28,12 @@ export class Toolbox implements IToolbox {
         for (const client of this.clients) {
             try {
                 const tools = await client.getTools();
-                if (tools.some(tool => tool.name === toolName)) {
-                    return await client.callTool(toolName, parameters);
+                const tool = tools.find(tool => `${client.name.toLowerCase()}-${tool.name}` === toolName);
+                if (tool) {
+                    return await client.callTool(tool.name, parameters);
                 }
             } catch (error) {
-                console.error(`Error getting tools from ${client.serverName}:`, error);
+                console.error(`Error getting tools from ${client.name}:`, error);
             }
         }
 
@@ -42,7 +47,7 @@ export class Toolbox implements IToolbox {
 
         results.forEach((result, index) => {
             if (result.status === 'rejected') {
-                console.error(`Failed to connect to ${this.clients[index].serverName}:`, result.reason);
+                console.error(`Failed to connect to ${this.clients[index].name}:`, result.reason);
             }
         });
     }

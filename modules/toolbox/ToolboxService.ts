@@ -1,8 +1,8 @@
 import { McpClientFactory } from "../mcp/index.js";
 import { Toolbox } from "./Toolbox.js";
-import { ToolboxService as IToolboxService } from "./types.js";
+import { ToolboxService as ToolboxServiceInterface } from "./types.js";
 
-export class ToolboxService implements IToolboxService {
+export class ToolboxService implements ToolboxServiceInterface {
     constructor(
         private mcpClientFactories: McpClientFactory[]
     ) {}

@@ -9,17 +9,17 @@ export class McpClient {
     private toolsCache: Tool[] | null = null;
 
     constructor(
-        readonly serverName: string,
-        readonly serverConfig: ServerConfig
+        readonly name: string,
+        readonly config: ServerConfig
     ) {
         this.client = new Client({
-            name: `chatterbox-client-${serverName}`,
+            name: `chatterbox-client-${name}`,
             version: "1.0.0"
         });
 
         this.transport = new StdioClientTransport({
             command: process.execPath,
-            ...serverConfig,
+            ...config,
         });
     }
 
@@ -27,7 +27,7 @@ export class McpClient {
         try {
             await this.client.connect(this.transport);
         } catch (error) {
-            console.error(`Failed to connect to ${this.serverName}:`, error);
+            console.error(`Failed to connect to ${this.name}:`, error);
             throw error;
         }
     }
@@ -46,7 +46,7 @@ export class McpClient {
             }));
             return this.toolsCache;
         } catch (error) {
-            console.error(`Failed to list tools provided by ${this.serverName}:`, error);
+            console.error(`Failed to list tools provided by ${this.name}:`, error);
             throw error;
         }
     }
@@ -58,7 +58,7 @@ export class McpClient {
                 arguments: parameters,
             });
         } catch (error) {
-            console.error(`Failed to call tool ${toolName} provided by ${this.serverName}:`, error);
+            console.error(`Failed to call tool ${toolName} provided by ${this.name}:`, error);
             throw error;
         }
     }
@@ -67,7 +67,7 @@ export class McpClient {
         try {
             await this.client.close();
         } catch (error) {
-            console.error(`Failed to disconnect from ${this.serverName}:`, error);
+            console.error(`Failed to disconnect from ${this.name}:`, error);
         }
     }
 }
