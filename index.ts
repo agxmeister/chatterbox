@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 import readline from "readline/promises";
 import { ConfigRepository, ConfigService } from "./modules/config/index.js";
 import {ClaudeService, Llm, LlmService} from "./modules/llm/index.js";
+import { ToolboxService } from "./modules/toolbox/index.js";
 import { McpClientFactory } from "./modules/mcp/index.js";
 
 dotenv.config();
@@ -51,7 +52,8 @@ async function chatLoop(llmService: LlmService): Promise<void> {
     const anthropic = new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY
     });
-    const claudeService = new ClaudeService(anthropic, mcpClientFactories);
+    const toolboxService = new ToolboxService(mcpClientFactories);
+    const claudeService = new ClaudeService(anthropic, toolboxService);
     
     try {
         await chatLoop(claudeService);

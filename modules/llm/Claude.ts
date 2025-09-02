@@ -1,11 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Llm } from "./types.js";
-import { McpClient } from "../mcp/index.js";
+import { Toolbox } from "../toolbox/types.js";
 
 export class Claude implements Llm {
     constructor(
         private anthropic: Anthropic,
-        readonly clients: McpClient[]
+        readonly toolbox: Toolbox
     ) {}
 
     async chat(messages: string[], history: any[]): Promise<string[]> {
@@ -17,7 +17,7 @@ export class Claude implements Llm {
         }
 
         try {
-            const allTools = await this.getTools();
+            const allTools = await this.toolbox.getTools();
             const response = await this.anthropic.messages.create({
                 model: "claude-sonnet-4-20250514",
                 max_tokens: 10000,
@@ -38,10 +38,10 @@ export class Claude implements Llm {
                 }
                 if (message.type === "tool_use") {
                     const tool = message.name;
-                    const args = message.input as Record<string, any> | undefined;
+                    const args = message.input as Record<string, any> || {};
 
 
-                    const result = await this.callTool(tool, args);
+                    const result = await this.toolbox.callTool(tool, args);
 
                     const content = result.content as { type: string; text: string }[];
                     const messages = content.map(message => message.text);
@@ -57,33 +57,5 @@ export class Claude implements Llm {
             console.error("Error chatting with Claude:", error);
             throw error;
         }
-    }
-
-    private async getTools() {
-        return (await Promise.all(
-            this.clients.map(async client => {
-                try {
-                    return await client.getTools();
-                } catch (error) {
-                    console.error(`Error getting tools from ${client.serverName}:`, error);
-                    return [];
-                }
-            })
-        )).flat();
-    }
-
-    private async callTool(toolName: string, parameters: Record<string, any> = {}): Promise<any> {
-        for (const client of this.clients) {
-            try {
-                const tools = await client.getTools();
-                if (tools.some(tool => tool.name === toolName)) {
-                    return await client.callTool(toolName, parameters);
-                }
-            } catch (error) {
-                console.error(`Error getting tools from ${client.serverName}:`, error);
-            }
-        }
-
-        throw new Error(`Tool ${toolName} not found or client not connected`);
     }
 }
