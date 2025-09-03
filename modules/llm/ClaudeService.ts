@@ -17,8 +17,6 @@ export class ClaudeService implements LlmService {
     }
 
     async retire(llm: Llm): Promise<void> {
-        console.log("Retiring LLM and disconnecting from all MCP servers...");
-        
         await llm.toolbox.disconnect();
     }
 

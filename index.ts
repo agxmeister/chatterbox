@@ -1,8 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
-import * as dotenv from "dotenv";
+import dotenv from "dotenv";
 import readline from "readline/promises";
 import { ConfigRepository, ConfigService } from "./modules/config/index.js";
-import {ClaudeService, Llm, LlmService} from "./modules/llm/index.js";
+import {ClaudeService, LlmService} from "./modules/llm/index.js";
 import { ToolboxService } from "./modules/toolbox/index.js";
 import { McpClientFactory } from "./modules/mcp/index.js";
 
@@ -19,18 +19,21 @@ async function chatLoop(llmService: LlmService): Promise<void> {
     try {
         llm = await llmService.engage();
 
-        console.log("Type your queries or 'quit' to exit.");
+        rl.write(`\x1b[90mType your queries or 'quit' to exit.\n`);
 
         const history: any[] = [];
         while (true) {
-            const message = await rl.question("\nQuery: ");
+            const message = await rl.question(`\x1b[38;5;167m> `);
+            if (!message.trim()) {
+                continue;
+            }
 
             if (message.toLowerCase() === "quit") {
                 break;
             }
 
             const response = await llm.chat([message], history);
-            console.log("\n" + response.join("\n"));
+            rl.write(`\x1b[0m${response.join("\n")}\n`);
         }
     } finally {
         if (llm) {

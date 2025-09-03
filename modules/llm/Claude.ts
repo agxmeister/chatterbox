@@ -29,7 +29,7 @@ export class Claude implements Llm {
 
             for (const message of response.content) {
                 if (message.type === "text") {
-                    output.push(`[Claude] ${message.text}`);
+                    output.push(`${message.text}`);
                     history.push({
                         role: "assistant",
                         content: message.text,
