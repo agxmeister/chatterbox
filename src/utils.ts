@@ -1,5 +1,5 @@
 import readline from "readline/promises";
-import { LlmService } from "./modules/llm/index.js";
+import { LlmService } from "@chatterbox/module/llm/index.js";
 
 export async function chatLoop(llmService: LlmService): Promise<void> {
     const rl = readline.createInterface({

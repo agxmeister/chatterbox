@@ -1,4 +1,4 @@
-import {ServerConfig} from "../config/types.js";
+import {ServerConfig} from "@chatterbox/module/config/types.js";
 import {McpClient} from "./McpClient.js";
 
 export class McpClientFactory {

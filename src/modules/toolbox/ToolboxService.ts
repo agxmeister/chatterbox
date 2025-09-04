@@ -1,4 +1,4 @@
-import { McpClientFactory } from "../mcp/index.js";
+import { McpClientFactory } from "@chatterbox/module/mcp/index.js";
 import { Toolbox } from "./Toolbox.js";
 import { ToolboxService as ToolboxServiceInterface } from "./types.js";
 

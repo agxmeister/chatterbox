@@ -1,5 +1,5 @@
 import { Tool } from "@anthropic-ai/sdk/resources/messages/messages.mjs";
-import { McpClient } from "../mcp/index.js";
+import { McpClient } from "@chatterbox/module/mcp/index.js";
 import { Toolbox as ToolboxInterface } from "./types.js";
 
 export class Toolbox implements ToolboxInterface {

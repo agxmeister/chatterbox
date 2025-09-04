@@ -1,13 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import dotenv from "dotenv";
-import { ConfigRepository, ConfigService } from "./modules/config/index.js";
-import {ClaudeService, LlmService} from "./modules/llm/index.js";
-import { ToolboxService } from "./modules/toolbox/index.js";
-import { McpClientFactory } from "./modules/mcp/index.js";
-import { chatLoop } from "./utils.js";
+import { ConfigRepository, ConfigService } from "@chatterbox/module/config/index.js";
+import { ClaudeService } from "@chatterbox/module/llm/index.js";
+import { ToolboxService } from "@chatterbox/module/toolbox/index.js";
+import { McpClientFactory } from "@chatterbox/module/mcp/index.js";
+import { chatLoop } from "@/utils.js";
 
 dotenv.config();
-
 
 (async () => {
     const configRepository = new ConfigRepository('./config.json');

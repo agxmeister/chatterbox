@@ -5,7 +5,7 @@
     "main": "build/index.js",
     "type": "module",
     "scripts": {
-        "build": "tsc && chmod 755 build/index.js",
+        "build": "tsc && tsc-alias -p tsconfig.json && chmod 755 build/index.js",
         "start": "node build/index.js"
     },
     "keywords": [],
@@ -14,7 +14,8 @@
     "dependencies": {
         "@anthropic-ai/sdk": "^0.60.0",
         "@modelcontextprotocol/sdk": "^1.17.4",
-        "dotenv": "^16.6.1"
+        "dotenv": "^16.6.1",
+        "tsc-alias": "^1.8.16"
     },
     "devDependencies": {
         "@types/node": "^24.3.0",

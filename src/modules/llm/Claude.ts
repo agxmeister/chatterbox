@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Llm } from "./types.js";
-import { Toolbox } from "../toolbox/types.js";
+import { Toolbox } from "@chatterbox/module/toolbox/types.js";
 
 export class Claude implements Llm {
     constructor(

@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Claude } from "./Claude.js";
 import { Llm, LlmService } from "./types.js";
-import { ToolboxService } from "../toolbox/ToolboxService.js";
+import { ToolboxService } from "@chatterbox/module/toolbox/ToolboxService.js";
 
 export class ClaudeService implements LlmService {
     constructor(
