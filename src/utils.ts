@@ -1,22 +1,17 @@
-import readline from "readline/promises";
 import { LlmService } from "@chatterbox/module/llm/index.js";
+import { Cli, Color } from "@chatterbox/module/cli/types.js";
 
-export async function chatLoop(llmService: LlmService): Promise<void> {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
-
+export async function chatLoop(llmService: LlmService, cli: Cli): Promise<void> {
     let llm = null;
     
     try {
         llm = await llmService.engage();
 
-        rl.write(`\x1b[90mType your queries or 'quit' to exit.\n`);
+        cli.output("Type your queries or 'quit' to exit.", Color.Gray);
 
         const history: any[] = [];
         while (true) {
-            const message = await rl.question(`\x1b[38;5;167m> `);
+            const message = await cli.input("> ");
             if (!message.trim()) {
                 continue;
             }
@@ -26,12 +21,12 @@ export async function chatLoop(llmService: LlmService): Promise<void> {
             }
 
             const response = await llm.chat([message], history);
-            rl.write(`\x1b[0m${response.join("\n")}\n`);
+            cli.output(response.join("\n"));
         }
     } finally {
         if (llm) {
             await llmService.retire(llm);
         }
-        rl.close();
+        cli.close();
     }
 }
