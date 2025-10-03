@@ -43,8 +43,16 @@ export class Claude implements Llm {
 
                     const result = await this.toolbox.callTool(tool, args);
 
-                    const content = result.content as { type: string; text: string }[];
-                    const messages = content.map(message => message.text);
+                    const content = result.content;
+
+                    const messages = content
+                        .filter(message => message.type === "text")
+                        .map(message => message.text);
+
+                    const images = content
+                        .filter(message => message.type === "image")
+                        .map(message => message.data);
+
                     output.push(...(await this.chat(
                         [`You asked to run the tool ${tool} with args ${JSON.stringify(args)}, and it returned the following:\n\n${messages.join("\n\n")}`],
                         history,

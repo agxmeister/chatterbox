@@ -2,6 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {Tool} from "@anthropic-ai/sdk/resources/messages/messages.mjs";
 import { ServerConfig } from "../config/types.js";
+import { CallToolResult } from "./types.js";
 
 export class McpClient {
     private readonly client: Client;
@@ -51,12 +52,17 @@ export class McpClient {
         }
     }
 
-    async callTool(toolName: string, parameters: Record<string, any> = {}): Promise<any> {
+    async callTool(toolName: string, parameters: Record<string, any> = {}): Promise<CallToolResult> {
         try {
-            return await this.client.callTool({
+            const result = await this.client.callTool({
                 name: toolName,
                 arguments: parameters,
-            });
+            }) as any;
+
+            return {
+                content: (result.content || []).filter((c: any) => c.type === "text" || c.type === "image"),
+                isError: result.isError ?? false,
+            };
         } catch (error) {
             console.error(`Failed to call tool ${toolName} provided by ${this.name}:`, error);
             throw error;

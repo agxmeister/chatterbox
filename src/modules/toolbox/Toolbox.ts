@@ -1,4 +1,5 @@
 import { Tool } from "@anthropic-ai/sdk/resources/messages/messages.mjs";
+import { CallToolResult } from "@chatterbox/module/mcp/types.js";
 import { McpClient } from "@chatterbox/module/mcp/index.js";
 import { Toolbox as ToolboxInterface } from "./types.js";
 
@@ -24,7 +25,7 @@ export class Toolbox implements ToolboxInterface {
         )).flat();
     }
 
-    async callTool(toolName: string, parameters: Record<string, any> = {}): Promise<any> {
+    async callTool(toolName: string, parameters: Record<string, any> = {}): Promise<CallToolResult> {
         for (const client of this.clients) {
             try {
                 const tools = await client.getTools();
