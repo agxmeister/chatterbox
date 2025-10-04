@@ -1,11 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Llm } from "./types.js";
 import { Toolbox } from "@chatterbox/module/toolbox/types.js";
+import { BreadcrumbsService } from "@chatterbox/module/breadcrumbs/index.js";
 
 export class Claude implements Llm {
     constructor(
         private anthropic: Anthropic,
-        readonly toolbox: Toolbox
+        readonly toolbox: Toolbox,
+        readonly breadcrumbsService: BreadcrumbsService
     ) {}
 
     async chat(messages: string[], history: any[]): Promise<string[]> {
@@ -49,9 +51,13 @@ export class Claude implements Llm {
                         .filter(message => message.type === "text")
                         .map(message => message.text);
 
-                    const images = content
-                        .filter(message => message.type === "image")
-                        .map(message => message.data);
+                    const images = [];
+                    for (const {data} of content.filter(message => message.type === "image")) {
+                        try {
+                            images.push(await this.breadcrumbsService.upload(data));
+                        } catch (error) {
+                        }
+                    }
 
                     output.push(...(await this.chat(
                         [`You asked to run the tool ${tool} with args ${JSON.stringify(args)}, and it returned the following:\n\n${messages.join("\n\n")}`],
