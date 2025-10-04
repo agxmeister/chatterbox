@@ -2,7 +2,7 @@ import { Toolbox } from "../toolbox/types.js";
 
 export interface Llm {
     readonly toolbox: Toolbox;
-    chat(messages: string[], history: any[]): Promise<string[]>;
+    chat(messages: string[], history: any[], images: string[]): Promise<string[]>;
 }
 
 export interface LlmService {

@@ -1,1 +1,1 @@
-export { BreadcrumbsService } from './service.js';
+export { Breadcrumbs } from './breadcrumbs.js';

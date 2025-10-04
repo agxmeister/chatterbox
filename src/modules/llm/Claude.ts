@@ -1,16 +1,16 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Llm } from "./types.js";
 import { Toolbox } from "@chatterbox/module/toolbox/types.js";
-import { BreadcrumbsService } from "@chatterbox/module/breadcrumbs/index.js";
+import { Breadcrumbs } from "@chatterbox/module/breadcrumbs/index.js";
 
 export class Claude implements Llm {
     constructor(
-        private anthropic: Anthropic,
         readonly toolbox: Toolbox,
-        readonly breadcrumbsService: BreadcrumbsService
+        readonly anthropic: Anthropic,
+        readonly breadcrumbs: Breadcrumbs
     ) {}
 
-    async chat(messages: string[], history: any[]): Promise<string[]> {
+    async chat(messages: string[], history: any[], images: string[]): Promise<string[]> {
         for (const message of messages) {
             history.push({
                 role: "user",
@@ -20,10 +20,21 @@ export class Claude implements Llm {
 
         try {
             const allTools = await this.toolbox.getTools();
+
+            const messages = [...history, ...images.map(image => ({
+                role: "user",
+                content: [{
+                    type: "image",
+                    source: {
+                        type: "url",
+                        url: `https://breadcrumbs.agxmeister.services/screenshots/${image}`,
+                    },
+                }],
+            }))];
             const response = await this.anthropic.messages.create({
                 model: "claude-sonnet-4-20250514",
                 max_tokens: 10000,
-                messages: history,
+                messages: messages,
                 tools: allTools
             });
 
@@ -51,10 +62,10 @@ export class Claude implements Llm {
                         .filter(message => message.type === "text")
                         .map(message => message.text);
 
-                    const images = [];
+                    images.length = 0;
                     for (const {data} of content.filter(message => message.type === "image")) {
                         try {
-                            images.push(await this.breadcrumbsService.upload(data));
+                            images.push(await this.breadcrumbs.upload(data));
                         } catch (error) {
                         }
                     }
@@ -62,6 +73,7 @@ export class Claude implements Llm {
                     output.push(...(await this.chat(
                         [`You asked to run the tool ${tool} with args ${JSON.stringify(args)}, and it returned the following:\n\n${messages.join("\n\n")}`],
                         history,
+                        images,
                     )));
                 }
             }
