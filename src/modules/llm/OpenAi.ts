@@ -47,9 +47,9 @@ export class OpenAi implements Llm {
         return augmentedSchema;
     }
 
-    async chat(messages: string[], history: any[], images: string[]): Promise<string[]> {
+    async chat(messages: string[], attachments: string[], thread: any[]): Promise<void> {
         for (const message of messages) {
-            history.push({
+            thread.push({
                 role: "user",
                 content: message,
             });
@@ -69,7 +69,7 @@ export class OpenAi implements Llm {
 
             const response = await this.openai.chat.completions.create({
                 model: "gpt-5-mini",
-                messages: history,
+                messages: thread,
                 tools: openaiTools.length > 0 ? openaiTools : undefined
             });
 
@@ -85,7 +85,7 @@ export class OpenAi implements Llm {
                 assistantMessage.tool_calls = choice.message.tool_calls;
             }
             
-            history.push(assistantMessage);
+            thread.push(assistantMessage);
             
             if (choice.message.content) {
                 output.push(choice.message.content);
@@ -106,7 +106,7 @@ export class OpenAi implements Llm {
 
                     const result = await this.toolbox.callTool(tool, args);
 
-                    history.push({
+                    thread.push({
                         role: "tool",
                         tool_call_id: toolCall.id,
                         content: JSON.stringify(result.content)
@@ -126,15 +126,13 @@ export class OpenAi implements Llm {
                         `Tool ${tool} with args ${JSON.stringify(args)} returned:\n${messages.join("\n")}`
                     ).join("\n\n");
 
-                    output.push(...(await this.chat(
+                    await this.chat(
                         [`The requested tools have been executed. Here are the results:\n\n${toolSummary}`],
-                        history,
-                        images,
-                    )));
+                        attachments,
+                        thread,
+                    )
                 }
             }
-
-            return output;
         } catch (error) {
             console.error("Error chatting with OpenAI:", error);
             throw error;

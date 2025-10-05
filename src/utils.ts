@@ -9,8 +9,8 @@ export async function chatLoop(llmService: LlmService, cli: Cli): Promise<void> 
 
         cli.output("Type your queries or 'quit' to exit.", Color.Gray);
 
-        const history: any[] = [];
-        const images: string[] = [];
+        const thread: any[] = [];
+        const attachments: string[] = [];
         while (true) {
             const message = await cli.input("> ");
             if (!message.trim()) {
@@ -21,9 +21,11 @@ export async function chatLoop(llmService: LlmService, cli: Cli): Promise<void> 
                 break;
             }
 
-            const response = await llm.chat([message], history, images);
-            cli.output(response.join("\n"));
+            await llm.chat([message], attachments, thread);
+            cli.output(JSON.stringify(thread, null, 2), Color.Default);
         }
+    } catch (error) {
+        cli.output(`Error: ${error}`, Color.Orange);
     } finally {
         if (llm) {
             await llmService.retire(llm);

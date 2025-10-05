@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Llm } from "./types.js";
 import { Toolbox } from "@chatterbox/module/toolbox/types.js";
 import { Breadcrumbs } from "@chatterbox/module/breadcrumbs/index.js";
+import { ToolUseBlock } from "@anthropic-ai/sdk/resources/messages";
 
 export class Claude implements Llm {
     constructor(
@@ -10,78 +11,66 @@ export class Claude implements Llm {
         readonly breadcrumbs: Breadcrumbs
     ) {}
 
-    async chat(messages: string[], history: any[], images: string[]): Promise<string[]> {
+    async chat(messages: string[], attachments: string[], thread: any[]): Promise<void> {
         for (const message of messages) {
-            history.push({
+            thread.push({
                 role: "user",
                 content: message,
             });
         }
 
-        try {
-            const allTools = await this.toolbox.getTools();
+        const request = {
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 10000,
+            messages: [
+                ...thread,
+                ...attachments.map(attachment => ({
+                    role: "user",
+                    content: [{
+                        type: "image",
+                        source: {
+                            type: "url",
+                            url: `https://breadcrumbs.agxmeister.services/screenshots/${attachment}`,
+                        },
+                    }],
+                }))
+            ],
+            tools: await this.toolbox.getTools(),
+        }
+        const response = await this.anthropic.messages.create(request);
 
-            const messages = [...history, ...images.map(image => ({
+        thread.push({
+            role: "assistant",
+            content: response.content,
+        });
+
+        const toolCallRequests = response.content
+            .filter((message: any) => message.type === "tool_use") as ToolUseBlock[];
+        for (const toolCallRequest of toolCallRequests) {
+            const toolCallResult = await this.toolbox.callTool(
+                toolCallRequest.name,
+                toolCallRequest.input as Record<string, any> || {}
+            );
+            const content = toolCallResult.content;
+
+            thread.push({
                 role: "user",
                 content: [{
-                    type: "image",
-                    source: {
-                        type: "url",
-                        url: `https://breadcrumbs.agxmeister.services/screenshots/${image}`,
-                    },
+                    type: "tool_result",
+                    tool_use_id: toolCallRequest.id,
+                    content: content,
                 }],
-            }))];
-            const response = await this.anthropic.messages.create({
-                model: "claude-sonnet-4-20250514",
-                max_tokens: 10000,
-                messages: messages,
-                tools: allTools
-            });
+            })
 
-            const output = [];
-
-            for (const message of response.content) {
-                if (message.type === "text") {
-                    output.push(`${message.text}`);
-                    history.push({
-                        role: "assistant",
-                        content: message.text,
-                    });
-                    continue;
-                }
-                if (message.type === "tool_use") {
-                    const tool = message.name;
-                    const args = message.input as Record<string, any> || {};
-
-
-                    const result = await this.toolbox.callTool(tool, args);
-
-                    const content = result.content;
-
-                    const messages = content
-                        .filter(message => message.type === "text")
-                        .map(message => message.text);
-
-                    images.length = 0;
-                    for (const {data} of content.filter(message => message.type === "image")) {
-                        try {
-                            images.push(await this.breadcrumbs.upload(data));
-                        } catch (error) {
-                        }
-                    }
-
-                    output.push(...(await this.chat(
-                        [`You asked to run the tool ${tool} with args ${JSON.stringify(args)}, and it returned the following:\n\n${messages.join("\n\n")}`],
-                        history,
-                        images,
-                    )));
+            attachments.length = 0;
+            for (const {data} of content.filter(message => message.type === "image")) {
+                try {
+                    attachments.push(await this.breadcrumbs.upload(data));
+                } catch (error) {
                 }
             }
 
-            return output;
-        } catch (error) {
-            console.error("Error chatting with Claude:", error);
-            throw error;
+            await this.chat([], attachments, thread)
         }
     }
 }
