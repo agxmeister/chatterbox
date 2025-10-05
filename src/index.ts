@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import dotenv from "dotenv";
 import { ConfigRepository, ConfigService } from "@chatterbox/module/config/index.js";
-import { ClaudeService } from "@chatterbox/module/llm/index.js";
+import { ClaudeService, OpenAiService } from "@chatterbox/module/llm/index.js";
 import { ToolboxService } from "@chatterbox/module/toolbox/index.js";
 import { McpClientFactory } from "@chatterbox/module/mcp/index.js";
 import { CliService } from "@chatterbox/module/cli/CliService.js";
@@ -23,12 +24,16 @@ dotenv.config();
     const anthropic = new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY
     });
+    const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY
+    });
     const breadcrumbs = new Breadcrumbs(
         "https://breadcrumbs.agxmeister.services/api",
         process.env.BREADCRUMBS_API_KEY!
     );
     const toolboxService = new ToolboxService(mcpClientFactories);
     const claudeService = new ClaudeService(toolboxService, anthropic, breadcrumbs);
+    const openAiService = new OpenAiService(openai, toolboxService);
     
     const readlineFactory = new ReadlineFactory();
     const cliService = new CliService(readlineFactory);
