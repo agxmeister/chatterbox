@@ -58,19 +58,19 @@ export class Claude implements Llm {
                 content: [{
                     type: "tool_result",
                     tool_use_id: toolCallRequest.id,
-                    content: content,
+                    content: content.filter(message => message.type !== "image"),
                 }],
             })
 
-            attachments.length = 0;
+            const images = [];
             for (const {data} of content.filter(message => message.type === "image")) {
                 try {
-                    attachments.push(await this.breadcrumbs.upload(data));
+                    images.push(await this.breadcrumbs.upload(data));
                 } catch (error) {
                 }
             }
 
-            await this.chat([], attachments, thread)
+            await this.chat([], images, thread)
         }
     }
 }
