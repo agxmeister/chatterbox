@@ -35,7 +35,7 @@ dotenv.config();
     const loggerFactory = new PinoLoggerFactory('./logs');
     const toolboxService = new ToolboxService(mcpClientFactories);
     const claudeService = new ClaudeService(toolboxService, anthropic, breadcrumbs, loggerFactory);
-    const openAiService = new OpenAiService(openai, toolboxService);
+    const openAiService = new OpenAiService(toolboxService, openai, breadcrumbs, loggerFactory);
     
     const readlineFactory = new ReadlineFactory();
     const cliService = new CliService(readlineFactory);
