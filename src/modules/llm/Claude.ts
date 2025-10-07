@@ -2,13 +2,15 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Llm } from "./types.js";
 import { Toolbox } from "@chatterbox/module/toolbox/types.js";
 import { Breadcrumbs } from "@chatterbox/module/breadcrumbs/index.js";
+import { Logger } from "@chatterbox/module/logger/index.js";
 import { ToolUseBlock } from "@anthropic-ai/sdk/resources/messages";
 
 export class Claude implements Llm {
     constructor(
         readonly toolbox: Toolbox,
         readonly anthropic: Anthropic,
-        readonly breadcrumbs: Breadcrumbs
+        readonly breadcrumbs: Breadcrumbs,
+        readonly logger: Logger
     ) {}
 
     async chat(messages: string[], attachments: string[], thread: any[]): Promise<void> {
@@ -37,7 +39,9 @@ export class Claude implements Llm {
             ],
             tools: await this.toolbox.getTools(),
         }
+        this.logger.info({ request }, 'Sending request to Claude API');
         const response = await this.anthropic.messages.create(request);
+        this.logger.info({ response }, 'Received response from Claude API');
 
         thread.push({
             role: "assistant",

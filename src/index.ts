@@ -8,6 +8,7 @@ import { McpClientFactory } from "@chatterbox/module/mcp/index.js";
 import { CliService } from "@chatterbox/module/cli/CliService.js";
 import { ReadlineFactory } from "@chatterbox/module/cli/ReadlineFactory.js";
 import { Breadcrumbs } from "@chatterbox/module/breadcrumbs/index.js";
+import { PinoLoggerFactory } from "@chatterbox/module/logger/index.js";
 import { chatLoop } from "@/utils.js";
 
 dotenv.config();
@@ -31,8 +32,9 @@ dotenv.config();
         "https://breadcrumbs.agxmeister.services/api",
         process.env.BREADCRUMBS_API_KEY!
     );
+    const loggerFactory = new PinoLoggerFactory('./logs');
     const toolboxService = new ToolboxService(mcpClientFactories);
-    const claudeService = new ClaudeService(toolboxService, anthropic, breadcrumbs);
+    const claudeService = new ClaudeService(toolboxService, anthropic, breadcrumbs, loggerFactory);
     const openAiService = new OpenAiService(openai, toolboxService);
     
     const readlineFactory = new ReadlineFactory();
