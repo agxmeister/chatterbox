@@ -21,7 +21,7 @@ export async function chatLoop(llmService: LlmService, cli: Cli): Promise<void> 
                 break;
             }
 
-            await llm.chat([message], attachments, thread);
+            await llm.chat([message], thread);
             cli.output(JSON.stringify(thread, null, 2), Color.Default);
         }
     } catch (error) {

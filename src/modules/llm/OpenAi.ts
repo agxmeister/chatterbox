@@ -47,7 +47,7 @@ export class OpenAi implements Llm {
         return augmentedSchema;
     }
 
-    async chat(messages: string[], attachments: string[], thread: any[]): Promise<void> {
+    async chat(messages: string[], thread: any[]): Promise<void> {
         for (const message of messages) {
             thread.push({
                 role: "user",
@@ -128,7 +128,6 @@ export class OpenAi implements Llm {
 
                     await this.chat(
                         [`The requested tools have been executed. Here are the results:\n\n${toolSummary}`],
-                        attachments,
                         thread,
                     )
                 }

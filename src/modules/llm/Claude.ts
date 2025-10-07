@@ -6,6 +6,8 @@ import { Logger } from "@chatterbox/module/logger/index.js";
 import { ToolUseBlock } from "@anthropic-ai/sdk/resources/messages";
 
 export class Claude implements Llm {
+    private attachments: string[] = [];
+
     constructor(
         readonly toolbox: Toolbox,
         readonly anthropic: Anthropic,
@@ -13,7 +15,8 @@ export class Claude implements Llm {
         readonly logger: Logger
     ) {}
 
-    async chat(messages: string[], attachments: string[], thread: any[]): Promise<void> {
+    async chat(messages: string[], thread: any[]): Promise<void> {
+
         for (const message of messages) {
             thread.push({
                 role: "user",
@@ -26,7 +29,7 @@ export class Claude implements Llm {
             max_tokens: 10000,
             messages: [
                 ...thread,
-                ...attachments.map(attachment => ({
+                ...this.attachments.map(attachment => ({
                     role: "user",
                     content: [{
                         type: "image",
@@ -73,8 +76,11 @@ export class Claude implements Llm {
                 } catch (error) {
                 }
             }
+            if (images.length > 0) {
+                this.attachments = images;
+            }
 
-            await this.chat([], images, thread)
+            await this.chat([], thread)
         }
     }
 }
